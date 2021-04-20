@@ -17,6 +17,8 @@ namespace Systems
 
         public void Run()
         {
+            if (!_players.Get1(0).IsAlive) return;
+            
             for (var i = 0; i < _inputEvents.GetEntitiesCount(); i++)
             {
                 var isShooting = _inputEvents.Get1(i).IsShooting;

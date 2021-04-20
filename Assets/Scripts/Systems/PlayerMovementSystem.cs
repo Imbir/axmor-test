@@ -16,21 +16,13 @@ namespace Systems
         private EcsFilter<UserMovementInputEvent> _inputEvents = null;
         private Camera _camera = null;
 
-        private float _minX;
-        private float _maxX;
-        private float _minY;
-        private float _maxY;
+        private float _minX = 0;
+        private float _maxX = 0;
+        private float _minY = 0;
+        private float _maxY = 0;
 
         public void Init()
         {
-            foreach (var playerTaggedObject in GameObject.FindGameObjectsWithTag(_settings.PlayerTag))
-            {
-                var player = _world.NewEntity();
-                
-                player.Get<PlayerComponent>().Transform = playerTaggedObject.transform;
-                player.Get<PlayerComponent>().MovementSpeed = _settings.PlayerMovementSpeed;
-            }
-            
             var verticalBounds = _camera.orthographicSize;
             var horizontalBounds = verticalBounds * Screen.width / Screen.height;
             var cameraPosition = _camera.transform.position;
@@ -43,6 +35,8 @@ namespace Systems
 
         public void Run()
         {
+            if (!_players.Get1(0).IsAlive) return;
+            
             for (var i = 0; i < _inputEvents.GetEntitiesCount(); i++)
             {
                 var direction = _inputEvents.Get1(i).MoveDirection;

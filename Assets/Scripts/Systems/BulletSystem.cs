@@ -36,6 +36,8 @@ namespace Systems
         
         public void Run()
         {
+            if (!_players.Get1(0).IsAlive) return;
+            
             HandleShotEvents();
             HandleBulletMovement();
         }
@@ -45,12 +47,12 @@ namespace Systems
             for (var i = 0; i < _shootEvents.GetEntitiesCount(); i++)
             {
                 var shotEvent = _shootEvents.Get1(i);
-                var newBullet = _world.NewEntity();
-                newBullet.Get<BulletComponent>().Transform = _bulletPool.GetObject().transform;
-                newBullet.Get<BulletComponent>().Transform.position = _settings.ProjectileSource.position;
-                newBullet.Get<BulletComponent>().Transform.gameObject.GetComponent<Bullet>().SetSprite(shotEvent.SelectedWeapon);
-                newBullet.Get<BulletComponent>().Damage = _settings.DamageValues[shotEvent.SelectedWeapon];
-                newBullet.Get<BulletComponent>().MovementSpeed = _settings.ProjectileSpeeds[shotEvent.SelectedWeapon];
+                ref var newBullet = ref _world.NewEntity().Get<BulletComponent>();
+                newBullet.Transform = _bulletPool.GetObject().transform;
+                newBullet.Transform.position = _settings.ProjectileSource.position;
+                newBullet.Transform.gameObject.GetComponent<Bullet>().SetSprite(shotEvent.SelectedWeapon);
+                newBullet.Damage = _settings.DamageValues[shotEvent.SelectedWeapon];
+                newBullet.MovementSpeed = _settings.ProjectileSpeeds[shotEvent.SelectedWeapon];
                 _shootEvents.GetEntity(i).Destroy();
             }
         }
@@ -63,16 +65,30 @@ namespace Systems
                 bullet.Transform.position += Vector3.right * (Time.deltaTime * bullet.MovementSpeed);
 
                 if (bullet.Transform.position.x > _maxX || bullet.Transform.position.x < _minX)
+                {
                     DestroyBullet(i);
-                
-                // check torpedo collision, damage
+                    continue;
+                }
+                    
+
+                for (var j = 0; j < _torpedoes.GetEntitiesCount(); j++)
+                {
+                    ref var torpedo = ref _torpedoes.Get1(j);
+                    
+                    if (Vector3.Distance(torpedo.Transform.position, bullet.Transform.position) > 0.5f) continue;
+                    
+                    torpedo.HitPoints -= bullet.Damage;
+                    torpedo.IsAlive = torpedo.HitPoints > 0;
+                    DestroyBullet(i);
+                    break;
+                }
             }
         }
 
-        private void DestroyBullet(int i)
+        private void DestroyBullet(int index)
         {
-            _bulletPool.Recycle(_bullets.Get1(i).Transform.gameObject.GetComponent<Bullet>());
-            _bullets.GetEntity(i).Destroy();
+            _bulletPool.Recycle(_bullets.Get1(index).Transform.gameObject.GetComponent<Bullet>());
+            _bullets.GetEntity(index).Destroy();
         }
     }
 }

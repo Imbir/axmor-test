@@ -1,5 +1,6 @@
 ﻿using Systems;
 using Core.DataClasses;
+using Core.MonoBehaviours;
 using Leopotam.Ecs;
 using UnityEngine;
 
@@ -13,6 +14,8 @@ namespace Core
         [SerializeField] private Camera _mainCamera;
         [SerializeField] private PlayerParameters _playerParameters;
         [SerializeField] private WeaponParameters _shootSystemParameters;
+        [SerializeField] private ThreatParameters _threatParameters;
+        [SerializeField] private Torpedo _torpedoPrefab;
 
         private void Start()
         {
@@ -21,6 +24,7 @@ namespace Core
             Leopotam.Ecs.UnityIntegration.EcsWorldObserver.Create(_world);
             
             _systems = new EcsSystems(_world)
+                .Add(new PlayerSystem())
                 .Add(new UserMovementInputSystem())
                 .Add(new PlayerMovementSystem())
                 .Add(new UserWeaponSwitchInputSystem())
@@ -28,9 +32,12 @@ namespace Core
                 .Add(new UserShootInputSystem())
                 .Add(new PlayerShootSystem())
                 .Add(new BulletSystem())
+                .Add(new TorpedoSystem())
                 .Inject(_mainCamera)
                 .Inject(_playerParameters)
-                .Inject(_shootSystemParameters);
+                .Inject(_shootSystemParameters)
+                .Inject(_threatParameters)
+                .Inject(_torpedoPrefab);
             
             _systems.Init();
 
